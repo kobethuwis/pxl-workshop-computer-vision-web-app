@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Vision Web App</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap');
+
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+            font-family: 'Comic Neue', cursive;
+            animation: color-change 2s infinite;
+        }
+
+        @keyframes color-change {
+            0% {
+                color: #333;
+            }
+
+            25% {
+                color: #007BFF;
+            }
+
+            50% {
+                color: #28a745;
+            }
+
+            75% {
+                color: #ffc107;
+            }
+
+            100% {
+                color: #dc3545;
+            }
+        }
+
+        form {
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        img {
+            margin-top: 20px;
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>PXL WORKSHOP COMPUTER VISION WEB APP</h1>
+    <h2>Upload an Image</h2>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="imageInput" name="image" accept="image/*">
+        <select id="filterSelect" name="filter">
+            <option value="cartoon">Cartoon</option>
+            <option value="grayscale">Grayscale</option>
+            <option value="edge_detection">Edge Detection</option>
+            <option value="deep_fry">Deep Fry</option>
+            <option value="belgium">Belgium</option>
+        </select>
+        <button type="submit">Upload</button>
+    </form>
+    <h2>Processed Image</h2>
+    <img id="processedImage" src="" alt="Processed Image">
+
+    <script>
+        document.getElementById('uploadForm').onsubmit = async function (event) {
+            event.preventDefault();
+            const formData = new FormData();
+            const imageInput = document.getElementById('imageInput');
+            const filterSelect = document.getElementById('filterSelect');
+            formData.append('image', imageInput.files[0]);
+            formData.append('filter', filterSelect.value);
+
+            const response = await fetch('/apply_filter', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            console.log(result); // Debugging information
+            const imgBase64 = `data:image/png;base64,${result.image}`;
+            document.getElementById('processedImage').src = imgBase64;
+        };
+    </script>
+</body>
+
+</html>
