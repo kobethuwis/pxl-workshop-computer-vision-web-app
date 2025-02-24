@@ -31,7 +31,7 @@ The PXL Workshop Computer Vision Web App is a simple web application that allows
 
 3. **Run the application**:
     ```sh
-    python app.py
+    python source_code/app.py
     ```
 
 4. **Open the web app in your browser**:
