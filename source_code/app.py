@@ -64,6 +64,11 @@ def apply_filter():
     return jsonify(response)
 
 
+@app.route('/health')
+def health():
+    return 'OK'
+
+
 def cartoonize_image(img):
     # Convert to gray scale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
