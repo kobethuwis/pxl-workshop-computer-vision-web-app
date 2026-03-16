@@ -24,14 +24,16 @@ The PXL Workshop Computer Vision Web App is a simple web application that allows
     cd pxl-workshop-computer-vision-web-app
     ```
 
-2. **Install the required dependencies**:
+2. **Install the required dependencies in a Python venv**:
     ```sh
+    python3 -m venv .venv
+    source .venv/bin/activate
     pip install -r requirements.txt
     ```
 
 3. **Run the application**:
     ```sh
-    python app.py
+    python3 source_code/app.py
     ```
 
 4. **Open the web app in your browser**:
