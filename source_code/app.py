@@ -5,8 +5,16 @@ import base64
 import logging
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
 
-logging.basicConfig(level=logging.DEBUG)
+FILTERS = {
+    'cartoon': lambda img: cartoonize_image(img),
+    'grayscale': lambda img: cv2.cvtColor(img, cv2.COLOR_BGR2GRAY),
+    'edge_detection': lambda img: _edge_detection(img),
+    'deep_fry': lambda img: deep_fry_image(img),
+    'belgium': lambda img: belgium_filter(img),
+    'sepia': lambda img: sepia_filter(img),
+}
 
 
 @app.route('/')
@@ -14,59 +22,54 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/process_image', methods=['POST'])
-def process_image():
-    file = request.files['image']
-    npimg = np.fromfile(file, np.uint8)
-    img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
-
-    # Perform image processing to generate a cartoon-like version
-    cartoon_img = cartoonize_image(img)
-
-    # Encode cartoon image to send back to client
-    _, img_encoded = cv2.imencode('.png', cartoon_img)
-    img_base64 = base64.b64encode(img_encoded).decode('utf-8')
-    response = {
-        'image': img_base64
-    }
-
-    return jsonify(response)
-
-
 @app.route('/apply_filter', methods=['POST'])
 def apply_filter():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No image provided'}), 400
     file = request.files['image']
-    filter_type = request.form['filter']
-    npimg = np.fromfile(file, np.uint8)
-    img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
-
-    if filter_type == 'cartoon':
-        processed_img = cartoonize_image(img)
-    elif filter_type == 'grayscale':
-        processed_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    elif filter_type == 'edge_detection':
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        processed_img = cv2.Canny(gray, 100, 200)
-    elif filter_type == 'deep_fry':
-        processed_img = deep_fry_image(img)
-    elif filter_type == 'belgium':
-        processed_img = belgium_filter(img)
-    else:
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    filter_type = request.form.get('filter', 'cartoon')
+    if filter_type not in FILTERS:
         return jsonify({'error': 'Invalid filter type'}), 400
 
-    # Encode processed image to send back to client
+    try:
+        npimg = np.frombuffer(file.read(), np.uint8)
+        img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+        if img is None:
+            return jsonify({'error': 'Could not decode image'}), 400
+    except Exception as e:
+        logging.exception('Image decode failed')
+        return jsonify({'error': 'Invalid image file'}), 400
+
+    try:
+        processed_img = FILTERS[filter_type](img)
+    except Exception as e:
+        logging.exception('Filter failed')
+        return jsonify({'error': 'Filter failed'}), 500
+
     _, img_encoded = cv2.imencode('.png', processed_img)
     img_base64 = base64.b64encode(img_encoded).decode('utf-8')
-    response = {
-        'image': img_base64
-    }
-
-    return jsonify(response)
+    return jsonify({'image': img_base64})
 
 
 @app.route('/health')
 def health():
     return 'OK'
+
+
+def _edge_detection(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    return cv2.Canny(gray, 100, 200)
+
+
+def sepia_filter(img):
+    kernel = np.array([
+        [0.272, 0.534, 0.131],
+        [0.349, 0.686, 0.168],
+        [0.393, 0.769, 0.189],
+    ])
+    return np.clip(cv2.transform(img, kernel), 0, 255).astype(np.uint8)
 
 
 def cartoonize_image(img):
