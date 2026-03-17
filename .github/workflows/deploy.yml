@@ -12,8 +12,8 @@ env:
   ECR_REPOSITORY: pxl-workshop-computer-vision-web-app
   ECS_CLUSTER: kobe-thuwis-web-app
   ECS_SERVICE: kobe-thuwis-web-app-ecs-service
-  ECS_TASK_DEFINITION: deployment/ecs-task-definition.json
   IMAGE_TAG: kobe-thuwis
+  ECS_TASK_DEFINITION: kobe-thuwis-web-app
   CONTAINER_NAME: kobe-thuwis-web-app
 
 jobs:
@@ -44,11 +44,18 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+      - name: Download the current ECS task definition
+        run: |
+          aws ecs describe-task-definition \
+          --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+          --query taskDefinition > task-definition.json
+        working-directory: deployment
+
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          task-definition: task-definition.json
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
 
