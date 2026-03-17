@@ -8,102 +8,244 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap');
 
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
             text-align: center;
-            background-color: #f0f0f0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
             margin: 0;
-            padding: 20px;
+            padding: 24px;
+            min-height: 100vh;
         }
 
         h1 {
             color: #333;
             font-family: 'Comic Neue', cursive;
-            animation: color-change 2s infinite;
+            animation: color-change 3s ease-in-out infinite;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 2rem;
         }
 
         @keyframes color-change {
-            0% {
-                color: #333;
-            }
-
-            25% {
-                color: #007BFF;
-            }
-
-            50% {
-                color: #28a745;
-            }
-
-            75% {
-                color: #ffc107;
-            }
-
-            100% {
-                color: #dc3545;
-            }
+            0%, 100% { color: #333; }
+            33% { color: #007BFF; }
+            66% { color: #28a745; }
         }
 
-        form {
-            margin: 20px 0;
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            max-width: 520px;
+            margin: 0 auto 1.5rem;
+            text-align: left;
         }
 
-        button {
-            padding: 10px 20px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            color: #444;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 0.35rem;
+        }
+
+        input[type="file"] {
+            display: block;
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            background: #fafafa;
             cursor: pointer;
         }
 
-        button:hover {
-            background-color: #0056b3;
+        input[type="file"]:hover {
+            border-color: #007BFF;
+            background: #f0f7ff;
         }
 
-        img {
-            margin-top: 20px;
-            max-width: 100%;
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        select {
+            flex: 1;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        button[type="submit"] {
+            padding: 0.65rem 1.5rem;
+            background: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button[type="submit"]:hover:not(:disabled) {
+            background: #0056b3;
+        }
+
+        button[type="submit"]:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        .message {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .message.error {
+            background: #fee;
+            color: #c00;
+            border: 1px solid #fcc;
+        }
+
+        .message.loading {
+            background: #e8f4ff;
+            color: #007BFF;
+        }
+
+        #resultSection {
+            display: none;
+        }
+
+        #resultSection.visible {
+            display: block;
+        }
+
+        #processedImage {
+            width: 100%;
             height: auto;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            border: 1px solid #eee;
         }
     </style>
 </head>
 
 <body>
-    <h1>PXL WORKSHOP COMPUTER VISION WEB APP</h1>
-    <h2>Upload an Image</h2>
-    <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" id="imageInput" name="image" accept="image/*">
-        <select id="filterSelect" name="filter">
-            <option value="cartoon">Cartoon</option>
-            <option value="grayscale">Grayscale</option>
-            <option value="edge_detection">Edge Detection</option>
-            <option value="deep_fry">Deep Fry</option>
-            <option value="belgium">Belgium</option>
-        </select>
-        <button type="submit">Upload</button>
-    </form>
-    <h2>Processed Image</h2>
-    <img id="processedImage" src="" alt="Processed Image">
+    <h1>PXL Workshop — Computer Vision</h1>
+    <p class="subtitle">Upload an image and apply a filter</p>
+
+    <div class="card">
+        <h2>Choose image & filter</h2>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <label for="imageInput">Image</label>
+            <input type="file" id="imageInput" name="image" accept="image/*">
+
+            <label for="filterSelect">Filter</label>
+            <div class="filter-row">
+                <select id="filterSelect" name="filter">
+                    <option value="cartoon">Cartoon</option>
+                    <option value="grayscale">Grayscale</option>
+                    <option value="edge_detection">Edge Detection</option>
+                    <option value="sepia">Sepia</option>
+                    <option value="deep_fry">Deep Fry</option>
+                    <option value="belgium">Belgium</option>
+                </select>
+                <button type="submit" id="submitBtn" disabled>Apply</button>
+            </div>
+        </form>
+        <div id="messageBox" class="message" role="alert" aria-live="polite" style="display: none;"></div>
+    </div>
+
+    <div class="card" id="resultSection">
+        <h2>Result</h2>
+        <img id="processedImage" src="" alt="Processed image">
+    </div>
 
     <script>
-        document.getElementById('uploadForm').onsubmit = async function (event) {
-            event.preventDefault();
-            const formData = new FormData();
-            const imageInput = document.getElementById('imageInput');
-            const filterSelect = document.getElementById('filterSelect');
-            formData.append('image', imageInput.files[0]);
-            formData.append('filter', filterSelect.value);
+        const form = document.getElementById('uploadForm');
+        const imageInput = document.getElementById('imageInput');
+        const filterSelect = document.getElementById('filterSelect');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageBox = document.getElementById('messageBox');
+        const resultSection = document.getElementById('resultSection');
+        const processedImage = document.getElementById('processedImage');
 
-            const response = await fetch('/apply_filter', {
-                method: 'POST',
-                body: formData
-            });
+        function showMessage(text, type) {
+            messageBox.textContent = text;
+            messageBox.className = 'message ' + (type || '');
+            messageBox.style.display = 'block';
+        }
 
-            const result = await response.json();
-            console.log(result); // Debugging information
-            const imgBase64 = `data:image/png;base64,${result.image}`;
-            document.getElementById('processedImage').src = imgBase64;
-        };
+        function hideMessage() {
+            messageBox.style.display = 'none';
+        }
+
+        function clearResult() {
+            resultSection.classList.remove('visible');
+            processedImage.removeAttribute('src');
+        }
+
+        imageInput.addEventListener('click', clearResult);
+        imageInput.addEventListener('change', function () {
+            clearResult();
+            submitBtn.disabled = !this.files || !this.files.length;
+        });
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            if (!imageInput.files || !imageInput.files[0]) {
+                showMessage('Please choose an image first.', 'error');
+                return;
+            }
+
+            hideMessage();
+            showMessage('Applying filter…', 'loading');
+            submitBtn.disabled = true;
+            resultSection.classList.remove('visible');
+
+            try {
+                const formData = new FormData();
+                formData.append('image', imageInput.files[0]);
+                formData.append('filter', filterSelect.value);
+
+                const response = await fetch('/apply_filter', { method: 'POST', body: formData });
+                const result = await response.json();
+
+                if (!response.ok) {
+                    showMessage(result.error || 'Something went wrong.', 'error');
+                    return;
+                }
+
+                processedImage.src = 'data:image/png;base64,' + result.image;
+                resultSection.classList.add('visible');
+                hideMessage();
+            } catch (err) {
+                showMessage('Network error. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = !imageInput.files || !imageInput.files.length;
+            }
+        });
     </script>
 </body>
 
