@@ -15,6 +15,8 @@ The PXL Workshop Computer Vision Web App is a simple web application that allows
 ## Prerequisites
 
 - Python 3.10.12
+- Extension for VSCode: vscode-pdf
+- Extension for VSCode: HashiCorp Terraform
 
 ## Usage
 
